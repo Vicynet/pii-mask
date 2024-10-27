@@ -1,4 +1,4 @@
-# PIIMask: A masking library for sensitive personal identification informatio (PII)n
+# PIIMask: A masking library for sensitive personal identification information (PII)
 
 [![PII Mask CI with Maven](https://github.com/Vicynet/pii-mask/actions/workflows/maven.yml/badge.svg)](https://github.com/Vicynet/pii-mask/actions/workflows/maven.yml)
 
