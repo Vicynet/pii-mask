@@ -1,0 +1,9 @@
+package dev.vicynet.piimask;
+
+public class App 
+{
+    public static void main( String[] args )
+    {
+        System.out.println( "PII Masking Utility Active" );
+    }
+}
