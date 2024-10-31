@@ -1,47 +1,42 @@
 package dev.vicynet.piimask;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.BeanProperty;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.ContextualSerializer;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-public class MaskDataSerializer extends JsonSerializer<Object> {
-    private static final Logger logger = Logger.getLogger(String.valueOf(MaskDataSerializer.class));
+@NoArgsConstructor
+@AllArgsConstructor
+public class MaskDataSerializer extends JsonSerializer<Object> implements ContextualSerializer {
+
+    private MaskData maskData;
 
     @Override
-    public void serialize(Object value, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-        if (value == null) {
-            jsonGenerator.writeNull();
-            return;
+    public void serialize(Object value, JsonGenerator jsonGenerator, SerializerProvider serializers) throws IOException {
+        if (maskData != null && value != null) {
+            String maskedValue = applyMasking(value.toString(), maskData.type(), maskData.length());
+            jsonGenerator.writeString(maskedValue);
+        } else {
+            jsonGenerator.writeString(String.valueOf(value));
         }
+    }
 
-        jsonGenerator.writeStartObject();
-        Class<?> valueClass = value.getClass();
-
-        for (Field field : valueClass.getDeclaredFields()) {
-            field.setAccessible(true);
-            try {
-                Object fieldValue = field.get(value);
-                String fieldName = field.getName();
-
-                if (fieldValue == null) {
-                    continue;
-                }
-
-                MaskData maskData = field.getAnnotation(MaskData.class);
-                if (maskData != null && fieldValue instanceof String stringValue) {
-                    String maskedValue = applyMasking(stringValue, maskData.type(), maskData.length());
-                    jsonGenerator.writeStringField(fieldName, maskedValue);
-                } else {
-                    jsonGenerator.writeObjectField(fieldName, fieldValue);
-                }
-            } catch (IllegalAccessException e) {
-                logger.log(Level.SEVERE, e.getMessage());
+    @Override
+    public JsonSerializer<?> createContextual(SerializerProvider serializerProvider, BeanProperty beanProperty) throws JsonMappingException {
+        if (beanProperty != null) {
+            MaskData maskData = beanProperty.getAnnotation(MaskData.class);
+            if (maskData != null) {
+                return new MaskDataSerializer(maskData); // Return serializer with masking settings
+            }
+            if(beanProperty.getType() != null){
+                return serializerProvider.findValueSerializer(beanProperty.getType(), beanProperty);
             }
         }
-        jsonGenerator.writeEndObject();
+        return serializerProvider.findValueSerializer(Object.class, beanProperty); // Default serializer if no MaskData annotation
     }
 
     private String applyMasking(String value, MaskDataE type, int length) {
