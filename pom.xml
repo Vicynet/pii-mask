@@ -4,7 +4,7 @@
 
   <groupId>dev.vicynet</groupId>
   <artifactId>piimask</artifactId>
-  <version>1.0.1</version>
+  <version>1.0.2</version>
   <packaging>jar</packaging>
   <name>PII Data Masking Utility</name>
   <description>A masking utility library for sensitive personal identification information (PII)</description>
